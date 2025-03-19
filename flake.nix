@@ -1,5 +1,5 @@
 {
-  description = "DGSA project dev shell with Python 3.8 and uv";
+  description = "DGSA dev shell with Python 3.8 + uv (compiled from source)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
@@ -12,23 +12,20 @@
         pkgs = import nixpkgs { inherit system; };
         python = pkgs.python38;
 
-        uv = pkgs.stdenv.mkDerivation {
+        uv = pkgs.rustPlatform.buildRustPackage rec {
           pname = "uv";
-          version = "0.1.28"; # 这里用 uv 的稳定版本
+          version = "0.1.28";
 
-          src = pkgs.fetchurl {
-            url = "https://github.com/astral-sh/uv/releases/download/0.1.28/uv-x86_64-unknown-linux-gnu.tar.gz";
-            sha256 = "sha256-91uhthg6r44v8ap5pd6jqz66zx55idp51l2v40fdhplpkzqk65yi";
+          src = pkgs.fetchFromGitHub {
+            owner = "astral-sh";
+            repo = "uv";
+            rev = "v${version}";
+            sha256 = "sha256-3TAzJW3qzUsZHG6DbRO1JLH4Q6C1rwzLBqIbIPUDmAk=";
           };
 
-          phases = [ "installPhase" ];
-
-          installPhase = ''
-            mkdir -p $out/bin
-            tar -xzf $src -C $out/bin
-            chmod +x $out/bin/uv
-          '';
+          cargoSha256 = "sha256-3WmFF7bY9jA9oow8waUQx6UsJ3U6fdGRUCPH7b1Sm2s=";
         };
+
       in {
         devShells.default = pkgs.mkShell {
           buildInputs = [
@@ -39,7 +36,7 @@
           shellHook = ''
             export PYTHONNOUSERSITE="true"
             export VIRTUAL_ENV=.venv
-            echo "✅ Python 3.8 + uv dev shell ready"
+            echo "✅ Python 3.8 + uv (build from source) dev shell ready"
 
             alias python=python3.8
           '';
